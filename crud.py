@@ -14,5 +14,13 @@ def create_meme(db: Session, meme: schemas.MemeCreate):
     return db_meme
 
 
+def delete_meme(db: Session, meme: schemas.MemeCreate):
+    pass
+
+
 def get_memes(db: Session, skip: int = 0, limit: int = 100):
     return db.query(models.Meme).offset(skip).limit(limit).all()
+
+
+def get_meme_by_id(db: Session, meme_id: int):
+    return db.query(models.Meme).filter(models.Meme.id == meme_id).first()

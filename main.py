@@ -3,7 +3,7 @@ import models
 import schemas
 import os
 from typing import Annotated
-from fastapi import FastAPI, File, UploadFile, Depends
+from fastapi import FastAPI, File, UploadFile, Depends, HTTPException
 from sqlalchemy.orm import Session
 from database import SessionLocal, engine
 
@@ -26,7 +26,8 @@ def get_db():
 @app.post("/memes/", response_model=schemas.Meme)
 def create_meme(
         meme: Annotated[schemas.MemeCreate, Depends()],
-        db: Session = Depends(get_db)):
+        db: Session = Depends(get_db)
+):
     return crud.create_meme(db=db, meme=meme)
 
 
@@ -36,3 +37,13 @@ def get_memes(
 ):
     memes = crud.get_memes(db, skip=skip, limit=limit)
     return memes
+
+
+@app.get("/memes/{meme_id}")
+def get_meme_by_id(
+        meme_id: int, db: Session = Depends(get_db)
+):
+    db_meme = crud.get_meme_by_id(db, meme_id=meme_id)
+    if db_meme is None:
+        raise HTTPException(status_code=404, detail="Meme not found")
+    return db_meme
