@@ -1,25 +1,38 @@
-from fastapi import FastAPI, File, Form, UploadFile
-from pydantic import BaseModel
+import crud
+import models
+import schemas
+import os
+from typing import Annotated
+from fastapi import FastAPI, File, UploadFile, Depends
+from sqlalchemy.orm import Session
+from database import SessionLocal, engine
+
+models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
 
+UPLOAD_DIR = "uploaded_memes"
+os.makedirs(UPLOAD_DIR, exist_ok=True)
 
-class Meme(BaseModel):
-    name: str
-    description: str | None = None
+
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
+
+@app.post("/memes/", response_model=schemas.Meme)
+def create_meme(
+        meme: Annotated[schemas.MemeCreate, Depends()],
+        db: Session = Depends(get_db)):
+    return crud.create_meme(db=db, meme=meme)
 
 
 @app.get("/memes")
-async def get_memes_list():
-    return {"message": "this page is for getting all the memes"}
-
-
-@app.get("/memes/{meme_id}")
-async def get_meme(meme_id: int):
-    return {"meme_id": meme_id}
-
-
-@app.post("/memes/")
-async def post_meme(meme: Meme):
-    return meme
-
+def get_memes(
+        skip: int = 0, limit: int = 100, db: Session = Depends(get_db)
+):
+    memes = crud.get_memes(db, skip=skip, limit=limit)
+    return memes

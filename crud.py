@@ -1,0 +1,18 @@
+from sqlalchemy.orm import Session
+import models
+import schemas
+
+
+def create_meme(db: Session, meme: schemas.MemeCreate):
+    db_meme = models.Meme(
+        text=meme.text,
+        image_path=meme.image_path
+    )
+    db.add(db_meme)
+    db.commit()
+    db.refresh(db_meme)
+    return db_meme
+
+
+def get_memes(db: Session, skip: int = 0, limit: int = 100):
+    return db.query(models.Meme).offset(skip).limit(limit).all()
