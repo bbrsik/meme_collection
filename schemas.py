@@ -10,6 +10,14 @@ class MemeCreate(MemeBase):
     pass
 
 
+class MemeUpdate(MemeBase):
+    text: str
+
+
+class MemeDelete(MemeBase):
+    pass
+
+
 class Meme(MemeBase):
     id: int
     image_path: str
