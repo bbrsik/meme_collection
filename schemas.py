@@ -4,7 +4,6 @@ import datetime
 
 class MemeBase(BaseModel):
     text: str
-    image_path: str | None = None
 
 
 class MemeCreate(MemeBase):

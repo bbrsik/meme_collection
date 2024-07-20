@@ -3,10 +3,10 @@ import models
 import schemas
 
 
-def create_meme(db: Session, meme: schemas.MemeCreate):
+def create_meme(db: Session, meme: schemas.MemeCreate, image_path=None):
     db_meme = models.Meme(
         text=meme.text,
-        image_path=meme.image_path
+        image_path=image_path
     )
     db.add(db_meme)
     db.commit()
