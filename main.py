@@ -20,7 +20,7 @@ def get_db():
 
 
 @app.post("/memes/", response_model=schemas.Meme)
-async def create_meme(
+def create_meme(
         meme: Annotated[schemas.MemeCreate, Depends()],
         image: UploadFile = File(...),
         db: Session = Depends(get_db)
@@ -31,7 +31,7 @@ async def create_meme(
     image_path = make_file_path(image)
 
     with open(image_path, "wb") as f:
-        content = await image.read()
+        content = image.file.read()
         f.write(content)
     return crud.create_meme(db=db, meme=meme, image_path=image_path)
 

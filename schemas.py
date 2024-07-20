@@ -12,6 +12,7 @@ class MemeCreate(MemeBase):
 
 class Meme(MemeBase):
     id: int
+    image_path: str
     upload_date: datetime.datetime
 
     class Config:
