@@ -1,10 +1,7 @@
-import fileinput
-import os
 import crud
 import models
 import schemas
-from secrets import token_hex
-from settings import UPLOAD_DIR
+from utility import make_file_path
 from typing import Annotated
 from fastapi import FastAPI, File, UploadFile, Depends, HTTPException
 from sqlalchemy.orm import Session
@@ -12,7 +9,6 @@ from database import SessionLocal, engine
 
 models.Base.metadata.create_all(bind=engine)
 app = FastAPI(title="MemeCollector")
-os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 
 def get_db():
@@ -32,9 +28,8 @@ async def create_meme(
     if image.content_type not in ["image/jpeg", "image/jpg", "image/png"]:
         raise HTTPException(status_code=406, detail="Only .jpeg, .jpg, .png files are allowed")
 
-    image_extension = image.filename.split(".").pop()
-    image_name = token_hex(10)
-    image_path = f"{UPLOAD_DIR}/{image_name}.{image_extension}"
+    image_path = make_file_path(image)
+
     with open(image_path, "wb") as f:
         content = await image.read()
         f.write(content)

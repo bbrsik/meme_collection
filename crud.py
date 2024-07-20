@@ -14,7 +14,7 @@ def create_meme(db: Session, meme: schemas.MemeCreate, image_path=None):
     return db_meme
 
 
-def delete_meme(db: Session, meme: schemas.MemeCreate):
+def delete_meme(db: Session, meme: schemas.MemeCreate, image_path=None):
     pass
 
 
