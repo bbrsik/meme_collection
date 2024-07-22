@@ -19,7 +19,7 @@ def get_db():
         db.close()
 
 
-@app.post("/memes/", response_model=schemas.Meme)
+@app.post("/memes/")
 def create_meme(
         meme: Annotated[schemas.MemeCreate, Depends()],
         image: UploadFile = File(...),
@@ -53,15 +53,28 @@ def get_meme_by_id(meme_id: int, db: Session = Depends(get_db)):
 
 
 @app.put("/memes/{meme_id}")
-def update_meme(meme_id: int, db: Session = Depends(get_db)):
-    return
+def update_meme(
+        meme_id,
+        meme: Annotated[schemas.MemeUpdate, Depends()],
+        image: UploadFile = File(...),
+        db: Session = Depends(get_db)
+):
+    db_meme = get_meme_by_id(meme_id, db)
+    image_path = db_meme.image_path
+    delete_file(image_path)
+
+    new_image_path = make_file_path(image)
+    with open(new_image_path, "wb") as f:
+        content = image.file.read()
+        f.write(content)
+
+    return crud.update_meme(db=db, meme=meme, meme_id=meme_id, image_path=new_image_path)
 
 
 @app.delete("/memes/{meme_id}")
 def delete_meme(meme_id: int, db: Session = Depends(get_db)):
     db_meme = get_meme_by_id(meme_id, db)
-    image_path = db_meme.__getattribute__("image_path")
+    image_path = db_meme.image_path
     crud.delete_meme(db, meme_id=meme_id)
     delete_file(image_path)
-
     return {"response": f"Meme with ID {meme_id} was successfully deleted!"}
