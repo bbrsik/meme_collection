@@ -3,12 +3,12 @@ import datetime
 
 
 class MemeBase(BaseModel):
-    text: str
+    text: str | None = None
 
 
 class Meme(MemeBase):
     id: int
-    image_path: str
+    image_path: FilePath | None = None
     upload_date: datetime.datetime
 
     class Config:

@@ -22,14 +22,16 @@ def get_db():
 @app.post("/memes/")
 def create_meme(
         meme: Annotated[schemas.MemeCreate, Depends()],
-        image: UploadFile = File(...),
+        image: UploadFile | None = None,
         db: Session = Depends(get_db)
 ):
+    if not image:
+        return crud.create_meme(db=db, meme=meme)
+
     if image.content_type not in ["image/jpeg", "image/jpg", "image/png"]:
         raise HTTPException(status_code=406, detail="Only .jpeg, .jpg, .png files are allowed!")
 
     image_path = make_file_path(image)
-
     with open(image_path, "wb") as f:
         content = image.file.read()
         f.write(content)
@@ -56,10 +58,14 @@ def get_meme_by_id(meme_id: int, db: Session = Depends(get_db)):
 def update_meme(
         meme_id,
         meme: Annotated[schemas.MemeUpdate, Depends()],
-        image: UploadFile = File(...),
+        image: UploadFile | None = None,
         db: Session = Depends(get_db)
 ):
     db_meme = get_meme_by_id(meme_id, db)
+
+    if not image:
+        return crud.update_meme(db=db, meme=meme, meme_id=meme_id)
+
     image_path = db_meme.image_path
     delete_file(image_path)
 
@@ -67,7 +73,6 @@ def update_meme(
     with open(new_image_path, "wb") as f:
         content = image.file.read()
         f.write(content)
-
     return crud.update_meme(db=db, meme=meme, meme_id=meme_id, image_path=new_image_path)
 
 

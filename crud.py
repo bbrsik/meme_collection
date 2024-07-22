@@ -16,8 +16,10 @@ def create_meme(db: Session, meme: schemas.MemeCreate, image_path=None):
 
 def update_meme(db: Session, meme: schemas.MemeUpdate, meme_id, image_path=None):
     db_meme = db.get(models.Meme, meme_id)
-    db_meme.text = meme.text
-    db_meme.image_path = image_path
+    if meme.text:
+        db_meme.text = meme.text
+    if image_path:
+        db_meme.image_path = image_path
     db.commit()
     db.refresh(db_meme)
     return db_meme
