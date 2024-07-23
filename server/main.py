@@ -3,7 +3,7 @@ import models
 import schemas
 from utility import make_file_path, delete_file
 from typing import Annotated
-from fastapi import FastAPI, File, UploadFile, Depends, HTTPException
+from fastapi import FastAPI, UploadFile, Depends, HTTPException
 from sqlalchemy.orm import Session
 from database import SessionLocal, engine
 
@@ -81,5 +81,6 @@ def delete_meme(meme_id: int, db: Session = Depends(get_db)):
     db_meme = get_meme_by_id(meme_id, db)
     image_path = db_meme.image_path
     crud.delete_meme(db, meme_id=meme_id)
-    delete_file(image_path)
+    if db_meme.image_path:
+        delete_file(image_path)
     return {"response": f"Meme with ID {meme_id} was successfully deleted!"}

@@ -27,6 +27,7 @@ def update_meme(db: Session, meme: schemas.MemeUpdate, meme_id, image_path=None)
 
 def delete_meme(db: Session, meme_id: int):
     db_meme = db.get(models.Meme, meme_id)
+    # todo в фильтр передаётся булево, но работает. как?
     # db_meme = db.query(models.Meme).filter(models.Meme.id == meme_id).first()
     db.delete(db_meme)
     db.commit()
@@ -38,4 +39,3 @@ def get_memes(db: Session, skip: int = 0, limit: int = 100):
 
 def get_meme_by_id(db: Session, meme_id: int):
     return db.get(models.Meme, meme_id)
-    # return db.query(models.Meme).filter(models.Meme.id == meme_id).first()
