@@ -1,6 +1,6 @@
 import os
 from secrets import token_hex
-from settings import UPLOAD_DIR
+from server.settings import UPLOAD_DIR
 
 
 def make_file_path(file):

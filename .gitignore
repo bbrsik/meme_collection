@@ -3,3 +3,4 @@ venv/
 __pycache__/
 memes.db
 uploaded_images/
+.env

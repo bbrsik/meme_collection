@@ -1,11 +1,13 @@
-import crud
-import models
-import schemas
-from utility import make_file_path, delete_file
+from server import crud
+from server import models
+from server import schemas
+from server.utility import make_file_path, delete_file
+from server.database import SessionLocal, engine
+from image_storage.main import router as image_router
 from typing import Annotated
 from fastapi import FastAPI, UploadFile, Depends, HTTPException
 from sqlalchemy.orm import Session
-from database import SessionLocal, engine
+
 
 models.Base.metadata.create_all(bind=engine)
 app = FastAPI(title="MemeCollector")
@@ -84,3 +86,6 @@ def delete_meme(meme_id: int, db: Session = Depends(get_db)):
     if db_meme.image_path:
         delete_file(image_path)
     return {"response": f"Meme with ID {meme_id} was successfully deleted!"}
+
+
+app.include_router(image_router, prefix="/storage")

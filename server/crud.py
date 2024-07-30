@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
-import models
-import schemas
+from server import models
+from server import schemas
 
 
 def create_meme(db: Session, meme: schemas.MemeCreate, image_path=None):
