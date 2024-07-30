@@ -1,5 +1,19 @@
-from minio import Minio
+import logging
 import os
+from minio import Minio
+# todo boto3
+from dotenv import load_dotenv, find_dotenv
+
+logger = logging.getLogger(__name__)
+# todo настроить логи
+
+if find_dotenv():
+    load_dotenv()
+else:
+    print('No .env file found.')
+    print('Please check the .env.example file and create the .env file.')
+    print('/// SHUTTING DOWN ///')
+    exit()
 
 UPLOAD_DIR = "./image_storage/temp_uploaded/"
 DOWNLOAD_DIR = "./image_storage/temp_downloaded/"
@@ -11,9 +25,9 @@ access_key = os.getenv("MINIO_ACCESS_KEY")
 secret_key = os.getenv("MINIO_SECRET_KEY")
 
 try:
-    client = Minio(endpoint=f"{endpoint}",
-                   access_key=f"{access_key}",
-                   secret_key=f"{secret_key}",
+    client = Minio(endpoint=endpoint,
+                   access_key=access_key,
+                   secret_key=secret_key,
                    secure=True)
 
     bucket_name = "python-bbrsik-fastapipet-bucket"
@@ -25,5 +39,5 @@ try:
     print("Connected to MinIO!")
 except:
     print("Failed to connect to MinIO.")
-    print('/// SHUTTING DOWN ///')
+    print("/// SHUTTING DOWN ///")
     exit()

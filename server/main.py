@@ -63,6 +63,11 @@ def get_meme_by_id(meme_id: int, db: Session = Depends(get_db)):
     db_meme = crud.get_meme_by_id(db, meme_id=meme_id)
     if db_meme is None:
         raise HTTPException(status_code=404, detail=f"Meme with ID {meme_id} doesn't exist!")
+    if db_meme.image_name:
+        download_image(image_name=db_meme.image_name,
+                       storage_key=os.getenv("IMAGE_STORAGE_API_KEY")
+                       )
+
     return db_meme
 
 

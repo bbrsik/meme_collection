@@ -3,6 +3,7 @@ from fastapi import APIRouter, HTTPException
 from image_storage.config import client, bucket_name
 from image_storage.config import DOWNLOAD_DIR
 
+# todo на другой порт
 router = APIRouter()
 
 
@@ -18,7 +19,7 @@ def upload_image(image_name=None, image_path=None, storage_key=None):
         result = client.fput_object(bucket_name=bucket_name, object_name=image_name, file_path=image_path)
     except:
         raise HTTPException(status_code=503, detail="Failed to upload image to storage.")
-    return 0
+    return {"detail": "success"}
 
 
 @router.get("/download_image/")
@@ -32,7 +33,7 @@ def download_image(image_name=None, storage_key=None):
         result = client.fget_object(bucket_name=bucket_name, object_name=image_name, file_path=download_path)
     except:
         raise HTTPException(status_code=503, detail="Failed to download image from storage.")
-    return 0
+    return {"detail": "success"}
 
 
 @router.delete("/delete_image/")
@@ -42,10 +43,10 @@ def delete_image(image_name=None, storage_key=None):
     if not client.bucket_exists(bucket_name=bucket_name):
         raise HTTPException(status_code=503, detail="Bucket does not exist.")
     try:
-        result = client.remove_object(bucket_name=bucket_name, object_name=image_name)
+        client.remove_object(bucket_name=bucket_name, object_name=image_name)
     except:
         raise HTTPException(status_code=503, detail="Failed to delete image from storage.")
-    return 0
+    return {"detail": "success"}
 
 
 @router.get("/list_images/")
@@ -55,3 +56,4 @@ def list_images():
     for obj in objects:
         result.append(obj)
     return result
+
