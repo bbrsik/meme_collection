@@ -1,9 +1,11 @@
+import os
 from server import crud
 from server import models
 from server import schemas
-from server.utility import make_file_path, delete_file
+from server.utility import make_file_path, delete_file, make_file_name
 from server.database import SessionLocal, engine
 from image_storage.main import router as image_router
+from image_storage.main import upload_image, download_image
 from typing import Annotated
 from fastapi import FastAPI, UploadFile, Depends, HTTPException
 from sqlalchemy.orm import Session
@@ -11,6 +13,7 @@ from sqlalchemy.orm import Session
 
 models.Base.metadata.create_all(bind=engine)
 app = FastAPI(title="MemeCollector")
+app.include_router(image_router, prefix="/storage")
 
 
 def get_db():
@@ -33,11 +36,18 @@ def create_meme(
     if image.content_type not in ["image/jpeg", "image/jpg", "image/png"]:
         raise HTTPException(status_code=406, detail="Only .jpeg, .jpg, .png files are allowed!")
 
-    image_path = make_file_path(image)
+    image_name = make_file_name(image)
+    image_path = make_file_path(image_name)
     with open(image_path, "wb") as f:
         content = image.file.read()
         f.write(content)
-    return crud.create_meme(db=db, meme=meme, image_path=image_path)
+    result = upload_image(image_name=image_name,
+                          image_path=image_path,
+                          storage_key=os.getenv("IMAGE_STORAGE_API_KEY"))
+    delete_file(image_path)
+    if result != 0:
+        return crud.create_meme(db=db, meme=meme)
+    return crud.create_meme(db=db, meme=meme, image_name=image_name)
 
 
 @app.get("/memes")
@@ -86,6 +96,3 @@ def delete_meme(meme_id: int, db: Session = Depends(get_db)):
     if db_meme.image_path:
         delete_file(image_path)
     return {"response": f"Meme with ID {meme_id} was successfully deleted!"}
-
-
-app.include_router(image_router, prefix="/storage")

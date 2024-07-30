@@ -8,7 +8,7 @@ class MemeBase(BaseModel):
 
 class Meme(MemeBase):
     id: int
-    image_path: FilePath | None = None
+    image_name: str | None = None
     upload_date: datetime.datetime
 
     class Config:

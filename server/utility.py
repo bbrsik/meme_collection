@@ -1,13 +1,18 @@
 import os
 from secrets import token_hex
-from server.settings import UPLOAD_DIR
+from image_storage.config import UPLOAD_DIR
 
 
-def make_file_path(file):
+def make_file_path(full_file_name):
+    file_path = f"{UPLOAD_DIR}/{full_file_name}"
+    return file_path
+
+
+def make_file_name(file):
     file_extension = file.filename.split(".").pop()
     file_name = token_hex(10)
-    file_path = f"{UPLOAD_DIR}/{file_name}.{file_extension}"
-    return file_path
+    full_file_name = f"{file_name}.{file_extension}"
+    return full_file_name
 
 
 def delete_file(file_path):

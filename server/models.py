@@ -9,5 +9,5 @@ class Meme(Base):
     id = Column(Integer, primary_key=True)
 
     text = Column(String, index=True)
-    image_path = Column(String, index=True)
+    image_name = Column(String, index=True)
     upload_date = Column(DateTime, default=datetime.datetime.now)
