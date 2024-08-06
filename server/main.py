@@ -14,17 +14,6 @@ models.Base.metadata.create_all(bind=engine)
 app = FastAPI(title="MemeCollector")
 
 
-def receive_signal(signalNumber, frame):
-    print('Received:', signalNumber)
-    sys.exit()
-
-
-@app.on_event("startup")
-async def startup_event():
-    import signal
-    signal.signal(signal.SIGINT, receive_signal)
-
-
 def get_db():
     db = SessionLocal()
     try:

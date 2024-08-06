@@ -8,17 +8,6 @@ from fastapi import FastAPI, HTTPException
 app = FastAPI(title="ImageStorage")
 
 
-def receive_signal(signalNumber, frame):
-    print('Received:', signalNumber)
-    sys.exit()
-
-
-@app.on_event("startup")
-async def startup_event():
-    import signal
-    signal.signal(signal.SIGINT, receive_signal)
-
-
 # todo сделать генерацию ключа хранилища при запуске приложения
 # todo или генерировать новый ключ на каждый вызов метода
 @app.post("/upload_image/")
