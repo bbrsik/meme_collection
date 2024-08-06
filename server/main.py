@@ -1,11 +1,10 @@
 import os
-from server import crud
-from server import models
-from server import schemas
-from server.utility import make_file_path, delete_file, make_file_name
-from server.database import SessionLocal, engine
-from image_storage.main import router as image_router
-from image_storage.main import upload_image, download_image
+import sys
+import crud
+import models
+import schemas
+from utility import make_file_path, delete_file, make_file_name
+from database import SessionLocal, engine
 from typing import Annotated
 from fastapi import FastAPI, UploadFile, Depends, HTTPException
 from sqlalchemy.orm import Session
@@ -13,7 +12,17 @@ from sqlalchemy.orm import Session
 
 models.Base.metadata.create_all(bind=engine)
 app = FastAPI(title="MemeCollector")
-app.include_router(image_router, prefix="/storage")
+
+
+def receive_signal(signalNumber, frame):
+    print('Received:', signalNumber)
+    sys.exit()
+
+
+@app.on_event("startup")
+async def startup_event():
+    import signal
+    signal.signal(signal.SIGINT, receive_signal)
 
 
 def get_db():
@@ -41,13 +50,13 @@ def create_meme(
     with open(image_path, "wb") as f:
         content = image.file.read()
         f.write(content)
-    result = upload_image(image_name=image_name,
-                          image_path=image_path,
-                          storage_key=os.getenv("IMAGE_STORAGE_API_KEY"))
+    # result = upload_image(image_name=image_name,
+    #                      image_path=image_path,
+    #                      storage_key=os.getenv("IMAGE_STORAGE_API_KEY"))
     delete_file(image_path)
-    if result != 0:
-        return crud.create_meme(db=db, meme=meme)
-    return crud.create_meme(db=db, meme=meme, image_name=image_name)
+    # if result != 0:
+    #     return crud.create_meme(db=db, meme=meme)
+    return crud.create_meme(db=db, meme=meme, image_url=image_name + " BAD")
 
 
 @app.get("/memes")
@@ -63,10 +72,10 @@ def get_meme_by_id(meme_id: int, db: Session = Depends(get_db)):
     db_meme = crud.get_meme_by_id(db, meme_id=meme_id)
     if db_meme is None:
         raise HTTPException(status_code=404, detail=f"Meme with ID {meme_id} doesn't exist!")
-    if db_meme.image_name:
-        download_image(image_name=db_meme.image_name,
-                       storage_key=os.getenv("IMAGE_STORAGE_API_KEY")
-                       )
+    # if db_meme.image_name:
+    #    download_image(image_name=db_meme.image_name,
+    #                   storage_key=os.getenv("IMAGE_STORAGE_API_KEY")
+    #                   )
 
     return db_meme
 
@@ -90,7 +99,7 @@ def update_meme(
     with open(new_image_path, "wb") as f:
         content = image.file.read()
         f.write(content)
-    return crud.update_meme(db=db, meme=meme, meme_id=meme_id, image_path=new_image_path)
+    return crud.update_meme(db=db, meme=meme, meme_id=meme_id, image_url=new_image_path + " BAD")
 
 
 @app.delete("/memes/{meme_id}")

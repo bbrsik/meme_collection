@@ -1,15 +1,27 @@
 import os
-from fastapi import APIRouter, HTTPException
-from image_storage.config import client, bucket_name
-from image_storage.config import DOWNLOAD_DIR
+import sys
+from settings import client, bucket_name
+from settings import DOWNLOAD_DIR
+from fastapi import FastAPI, HTTPException
 
-# todo на другой порт
-router = APIRouter()
+
+app = FastAPI(title="ImageStorage")
+
+
+def receive_signal(signalNumber, frame):
+    print('Received:', signalNumber)
+    sys.exit()
+
+
+@app.on_event("startup")
+async def startup_event():
+    import signal
+    signal.signal(signal.SIGINT, receive_signal)
 
 
 # todo сделать генерацию ключа хранилища при запуске приложения
 # todo или генерировать новый ключ на каждый вызов метода
-@router.post("/upload_image/")
+@app.post("/upload_image/")
 def upload_image(image_name=None, image_path=None, storage_key=None):
     if not storage_key == os.getenv("IMAGE_STORAGE_API_KEY"):
         raise HTTPException(status_code=403, detail="Access denied.")
@@ -22,7 +34,7 @@ def upload_image(image_name=None, image_path=None, storage_key=None):
     return {"detail": "success"}
 
 
-@router.get("/download_image/")
+@app.get("/download_image/")
 def download_image(image_name=None, storage_key=None):
     download_path = DOWNLOAD_DIR + image_name
     if not storage_key == os.getenv("IMAGE_STORAGE_API_KEY"):
@@ -36,7 +48,7 @@ def download_image(image_name=None, storage_key=None):
     return {"detail": "success"}
 
 
-@router.delete("/delete_image/")
+@app.delete("/delete_image/")
 def delete_image(image_name=None, storage_key=None):
     if not storage_key == os.getenv("IMAGE_STORAGE_API_KEY"):
         raise HTTPException(status_code=403, detail="Access denied.")
@@ -49,7 +61,7 @@ def delete_image(image_name=None, storage_key=None):
     return {"detail": "success"}
 
 
-@router.get("/list_images/")
+@app.get("/list_images/")
 def list_images():
     objects = client.list_objects(bucket_name=bucket_name)
     result = []

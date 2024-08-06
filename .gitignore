@@ -4,5 +4,3 @@ __pycache__/
 memes.db
 uploaded_images/
 .env
-image_storage/temp_uploaded/
-image_storage/temp_downloaded/

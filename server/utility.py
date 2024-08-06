@@ -1,6 +1,6 @@
 import os
 from secrets import token_hex
-from image_storage.config import UPLOAD_DIR
+from settings import UPLOAD_DIR
 
 
 def make_file_path(full_file_name):
