@@ -3,10 +3,11 @@ import models
 import schemas
 import requests
 from settings import IMAGE_STORAGE_URL, IMAGE_STORAGE_API_KEY
-from utility import delete_file, make_file_name
+from utility import make_file_name
 from database import SessionLocal, engine
 from typing import Annotated
 from fastapi import FastAPI, UploadFile, Depends, HTTPException
+from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 
 
@@ -48,7 +49,7 @@ def create_meme(
             raise HTTPException(status_code=503, detail="Failed to upload file to storage.")
 
     except requests.exceptions.ConnectionError:
-        raise HTTPException(status_code=503, detail="Image uploading is currently unavailable.")
+        raise HTTPException(status_code=503, detail="Image storage is currently unavailable.")
 
 
 @app.get("/memes")
@@ -64,11 +65,6 @@ def get_meme_by_id(meme_id: int, db: Session = Depends(get_db)):
     db_meme = crud.get_meme_by_id(db, meme_id=meme_id)
     if db_meme is None:
         raise HTTPException(status_code=404, detail=f"Meme with ID {meme_id} doesn't exist!")
-    # if db_meme.image_name:
-    #    download_image(image_name=db_meme.image_name,
-    #                   storage_key=os.getenv("IMAGE_STORAGE_API_KEY")
-    #                   )
-
     return db_meme
 
 
@@ -84,21 +80,28 @@ def update_meme(
     if not image:
         return crud.update_meme(db=db, meme=meme, meme_id=meme_id)
 
-    image_path = db_meme.image_path
-    delete_file(image_path)
-
-    # new_image_path = make_file_path(image)
-    # with open(new_image_path, "wb") as f:
-    #     content = image.file.read()
-    #     f.write(content)
-    return crud.update_meme(db=db, meme=meme, meme_id=meme_id, image_url=new_image_path + " BAD")
+    return crud.update_meme(db=db, meme=meme, meme_id=meme_id, image_name=new_image_name, image_url=new_image_url)
 
 
 @app.delete("/memes/{meme_id}")
 def delete_meme(meme_id: int, db: Session = Depends(get_db)):
     db_meme = get_meme_by_id(meme_id, db)
-    image_path = db_meme.image_path
-    crud.delete_meme(db, meme_id=meme_id)
-    if db_meme.image_path:
-        delete_file(image_path)
-    return {"response": f"Meme with ID {meme_id} was successfully deleted!"}
+    if not db_meme.image_name:
+        crud.delete_meme(db, meme_id=meme_id)
+        return JSONResponse(status_code=200,
+                            content={"message": f"Meme with ID {meme_id} was successfully deleted!"})
+
+    try:
+        response = requests.delete(url=f"{IMAGE_STORAGE_URL}/delete_image/",
+                                   data={"image_name": db_meme.image_name},
+                                   headers={"Storage-Key": IMAGE_STORAGE_API_KEY})
+
+        if response.status_code == 200:
+            crud.delete_meme(db, meme_id=meme_id)
+            return JSONResponse(status_code=200,
+                                content={"message": f"Meme with ID {meme_id} was successfully deleted!"})
+        else:
+            raise HTTPException(status_code=503, detail="Failed to delete file from storage.")
+
+    except requests.exceptions.ConnectionError:
+        raise HTTPException(status_code=503, detail="Image storage is currently unavailable.")
