@@ -3,6 +3,7 @@ import sys
 import crud
 import models
 import schemas
+import requests
 from utility import make_file_path, delete_file, make_file_name
 from database import SessionLocal, engine
 from typing import Annotated
@@ -34,17 +35,8 @@ def create_meme(
     if image.content_type not in ["image/jpeg", "image/jpg", "image/png"]:
         raise HTTPException(status_code=406, detail="Only .jpeg, .jpg, .png files are allowed!")
 
-    image_name = make_file_name(image)
-    image_path = make_file_path(image_name)
-    with open(image_path, "wb") as f:
-        content = image.file.read()
-        f.write(content)
-    # result = upload_image(image_name=image_name,
-    #                      image_path=image_path,
-    #                      storage_key=os.getenv("IMAGE_STORAGE_API_KEY"))
-    delete_file(image_path)
-    # if result != 0:
-    #     return crud.create_meme(db=db, meme=meme)
+    image.filename = make_file_name(image.filename)
+    response = requests.post("localhost:8002/upload")
     return crud.create_meme(db=db, meme=meme, image_url=image_name + " BAD")
 
 
