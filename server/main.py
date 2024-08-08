@@ -79,8 +79,26 @@ def update_meme(
 
     if not image:
         return crud.update_meme(db=db, meme=meme, meme_id=meme_id)
+    if image.content_type not in ["image/jpeg", "image/jpg", "image/png"]:
+        raise HTTPException(status_code=406, detail="Only .jpeg, .jpg, .png files are allowed!")
 
-    return crud.update_meme(db=db, meme=meme, meme_id=meme_id, image_name=new_image_name, image_url=new_image_url)
+    try:
+        image.filename = make_file_name(image.filename)
+        image_content = image.file.read()
+
+        response = requests.put(url=f"{IMAGE_STORAGE_URL}/update_image/",
+                                data={"old_image_name": db_meme.image_name},
+                                files={"new_image": (image.filename, image_content, image.content_type)},
+                                headers={"Storage-Key": IMAGE_STORAGE_API_KEY})
+
+        if response.status_code == 200:
+            new_image_url = response.json().get("new_image_url")
+            return crud.update_meme(db=db, meme=meme, meme_id=meme_id, image_name=image.filename, image_url=new_image_url)
+        else:
+            raise HTTPException(status_code=503, detail="Failed to upload file to storage.")
+
+    except requests.exceptions.ConnectionError:
+        raise HTTPException(status_code=503, detail="Image storage is currently unavailable.")
 
 
 @app.delete("/memes/{meme_id}")

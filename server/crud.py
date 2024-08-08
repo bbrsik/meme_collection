@@ -16,6 +16,7 @@ def create_meme(db: Session, meme: schemas.MemeCreate, image_name=None, image_ur
 
 
 def update_meme(db: Session, meme: schemas.MemeUpdate, meme_id, image_name=None, image_url=None):
+
     db_meme = db.get(models.Meme, meme_id)
 
     if meme.text:
