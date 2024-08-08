@@ -10,5 +10,4 @@ else:
     exit()
 
 IMAGE_STORAGE_API_KEY = os.getenv("IMAGE_STORAGE_API_KEY")
-SERVER_URL = os.getenv("SERVER_URL")
 IMAGE_STORAGE_URL = os.getenv("IMAGE_STORAGE_URL")

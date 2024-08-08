@@ -1,10 +1,8 @@
-import os
-import sys
 import crud
 import models
 import schemas
 import requests
-from settings import SERVER_URL, IMAGE_STORAGE_URL, IMAGE_STORAGE_API_KEY
+from settings import IMAGE_STORAGE_URL, IMAGE_STORAGE_API_KEY
 from utility import delete_file, make_file_name
 from database import SessionLocal, engine
 from typing import Annotated
@@ -35,17 +33,22 @@ def create_meme(
     if image.content_type not in ["image/jpeg", "image/jpg", "image/png"]:
         raise HTTPException(status_code=406, detail="Only .jpeg, .jpg, .png files are allowed!")
 
-    image.filename = make_file_name(image.filename)
-    image_content = image.file.read()
+    try:
+        image.filename = make_file_name(image.filename)
+        image_content = image.file.read()
 
-    response = requests.post(url=f"{IMAGE_STORAGE_URL}/upload_image/",
-                             files={"image": (image.filename, image_content, image.content_type)},
-                             headers={"Storage-Key": IMAGE_STORAGE_API_KEY})
+        response = requests.post(url=f"{IMAGE_STORAGE_URL}/upload_image/",
+                                 files={"image": (image.filename, image_content, image.content_type)},
+                                 headers={"Storage-Key": IMAGE_STORAGE_API_KEY})
 
-    if response.status_code == 200:
-        return crud.create_meme(db=db, meme=meme, image_url="some_url")
-    else:
-        raise HTTPException(status_code=503, detail="Failed to upload file to storage.")
+        if response.status_code == 200:
+            image_url = response.json().get("image_url")
+            return crud.create_meme(db=db, meme=meme, image_name=image.filename, image_url=image_url)
+        else:
+            raise HTTPException(status_code=503, detail="Failed to upload file to storage.")
+
+    except requests.exceptions.ConnectionError:
+        raise HTTPException(status_code=503, detail="Image uploading is currently unavailable.")
 
 
 @app.get("/memes")

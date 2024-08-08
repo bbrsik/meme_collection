@@ -18,17 +18,27 @@ MINIO_BUCKET_NAME = os.getenv("MINIO_BUCKET_NAME")
 MINIO_ENDPOINT = os.getenv("MINIO_ENDPOINT")
 MINIO_ACCESS_KEY = os.getenv("MINIO_ACCESS_KEY")
 MINIO_SECRET_KEY = os.getenv("MINIO_SECRET_KEY")
+MINIO_URL = os.getenv("MINIO_URL")
 
 try:
-    client = Minio(endpoint=MINIO_ENDPOINT,
-                   access_key=MINIO_ACCESS_KEY,
-                   secret_key=MINIO_SECRET_KEY,
-                   secure=False)
+    MINIO_CLIENT = Minio(endpoint=MINIO_ENDPOINT,
+                         access_key=MINIO_ACCESS_KEY,
+                         secret_key=MINIO_SECRET_KEY,
+                         secure=False)
 
-    if not client.bucket_exists(MINIO_BUCKET_NAME):
+    if not MINIO_CLIENT.bucket_exists(MINIO_BUCKET_NAME):
         print("No MinIO bucket found.")
-        client.make_bucket(MINIO_BUCKET_NAME)
+        MINIO_CLIENT.make_bucket(MINIO_BUCKET_NAME)
         print("MinIO bucket created.")
+
+    policy = '{"Version":"2012-10-17",' \
+             '"Statement":[{"Effect":"Allow",' \
+             '"Principal":"*",' \
+             '"Action":"s3:GetObject",' \
+             '"Resource":"arn:aws:s3:::' + MINIO_BUCKET_NAME + '/*"}]}'
+
+    if not MINIO_CLIENT.get_bucket_policy(MINIO_BUCKET_NAME) == policy:
+        MINIO_CLIENT.set_bucket_policy(MINIO_BUCKET_NAME, policy)
 
 except S3Error as e:
     print("Failed to connect to MinIO")
