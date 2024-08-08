@@ -1,6 +1,5 @@
 import os
 from secrets import token_hex
-from settings import UPLOAD_DIR
 
 
 def make_file_name(filename):
@@ -11,9 +10,9 @@ def make_file_name(filename):
 
 
 # obsolete
-def make_file_path(full_file_name):
-    file_path = f"{UPLOAD_DIR}/{full_file_name}"
-    return file_path
+# def make_file_path(full_file_name):
+#     file_path = f"{UPLOAD_DIR}/{full_file_name}"
+#     return file_path
 
 
 # obsolete

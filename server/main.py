@@ -4,7 +4,8 @@ import crud
 import models
 import schemas
 import requests
-from utility import make_file_path, delete_file, make_file_name
+from settings import SERVER_URL, IMAGE_STORAGE_URL, IMAGE_STORAGE_API_KEY
+from utility import delete_file, make_file_name
 from database import SessionLocal, engine
 from typing import Annotated
 from fastapi import FastAPI, UploadFile, Depends, HTTPException
@@ -31,13 +32,20 @@ def create_meme(
 ):
     if not image:
         return crud.create_meme(db=db, meme=meme)
-
     if image.content_type not in ["image/jpeg", "image/jpg", "image/png"]:
         raise HTTPException(status_code=406, detail="Only .jpeg, .jpg, .png files are allowed!")
 
     image.filename = make_file_name(image.filename)
-    response = requests.post("localhost:8002/upload")
-    return crud.create_meme(db=db, meme=meme, image_url=image_name + " BAD")
+    image_content = image.file.read()
+
+    response = requests.post(url=f"{IMAGE_STORAGE_URL}/upload_image/",
+                             files={"image": (image.filename, image_content, image.content_type)},
+                             headers={"Storage-Key": IMAGE_STORAGE_API_KEY})
+
+    if response.status_code == 200:
+        return crud.create_meme(db=db, meme=meme, image_url="some_url")
+    else:
+        raise HTTPException(status_code=503, detail="Failed to upload file to storage.")
 
 
 @app.get("/memes")
@@ -76,10 +84,10 @@ def update_meme(
     image_path = db_meme.image_path
     delete_file(image_path)
 
-    new_image_path = make_file_path(image)
-    with open(new_image_path, "wb") as f:
-        content = image.file.read()
-        f.write(content)
+    # new_image_path = make_file_path(image)
+    # with open(new_image_path, "wb") as f:
+    #     content = image.file.read()
+    #     f.write(content)
     return crud.update_meme(db=db, meme=meme, meme_id=meme_id, image_url=new_image_path + " BAD")
 
 

@@ -1,7 +1,6 @@
 import os
 import logging
-# todo import boto3
-from minio import Minio
+from minio import Minio, S3Error
 from dotenv import load_dotenv, find_dotenv
 
 logger = logging.getLogger(__name__)
@@ -15,26 +14,23 @@ else:
     print('/// SHUTTING DOWN ///')
     exit()
 
-UPLOAD_DIR = "./temp_uploaded/"
-DOWNLOAD_DIR = "./temp_downloaded/"
-os.makedirs(UPLOAD_DIR, exist_ok=True)
-os.makedirs(DOWNLOAD_DIR, exist_ok=True)
+MINIO_BUCKET_NAME = os.getenv("MINIO_BUCKET_NAME")
+MINIO_ENDPOINT = os.getenv("MINIO_ENDPOINT")
+MINIO_ACCESS_KEY = os.getenv("MINIO_ACCESS_KEY")
+MINIO_SECRET_KEY = os.getenv("MINIO_SECRET_KEY")
 
-bucket_name = os.getenv("MINIO_BUCKET_NAME")
-endpoint = os.getenv("MINIO_ENDPOINT")
-access_key = os.getenv("MINIO_ACCESS_KEY")
-secret_key = os.getenv("MINIO_SECRET_KEY")
-print(bucket_name, endpoint, access_key, secret_key)
+try:
+    client = Minio(endpoint=MINIO_ENDPOINT,
+                   access_key=MINIO_ACCESS_KEY,
+                   secret_key=MINIO_SECRET_KEY,
+                   secure=False)
 
-client = Minio(endpoint=endpoint,
-               access_key=access_key,
-               secret_key=secret_key,
-               secure=False)
+    if not client.bucket_exists(MINIO_BUCKET_NAME):
+        print("No MinIO bucket found.")
+        client.make_bucket(MINIO_BUCKET_NAME)
+        print("MinIO bucket created.")
 
-if not client.bucket_exists(bucket_name):
-    print("No MinIO bucket found.")
-    client.make_bucket(bucket_name)
-    print("MinIO bucket created.")
-
-print("Connected to MinIO!")
-
+except S3Error as e:
+    print("Failed to connect to MinIO")
+    print(str(e))
+    print("Failed to connect to MinIO")

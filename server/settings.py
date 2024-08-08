@@ -1,7 +1,14 @@
 import os
+from dotenv import load_dotenv, find_dotenv
 
+if find_dotenv():
+    load_dotenv()
+else:
+    print('No .env file found.')
+    print('Please check the .env.example file and create the .env file.')
+    print('/// SHUTTING DOWN ///')
+    exit()
 
-UPLOAD_DIR = "./temp_uploaded/"
-DOWNLOAD_DIR = "./temp_downloaded/"
-os.makedirs(UPLOAD_DIR, exist_ok=True)
-os.makedirs(DOWNLOAD_DIR, exist_ok=True)
+IMAGE_STORAGE_API_KEY = os.getenv("IMAGE_STORAGE_API_KEY")
+SERVER_URL = os.getenv("SERVER_URL")
+IMAGE_STORAGE_URL = os.getenv("IMAGE_STORAGE_URL")
