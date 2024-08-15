@@ -3,5 +3,16 @@ services:
   server:
     build: server
     image: server
-    ports:
-      - "8000:8000"
+    network_mode: host
+    env_file:
+      - server/.env
+  image_storage:
+    build: image_storage
+    image: image_storage
+    network_mode: host
+    env_file:
+      - image_storage/.env
+  minio:
+    image: minio/minio
+    network_mode: host
+    command: minio server data --console-address :9001

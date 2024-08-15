@@ -9,5 +9,8 @@ class Meme(Base):
     id = Column(Integer, primary_key=True)
     text = Column(String, index=True)
     image_name = Column(String, index=True)
-    image_url = Column(String, index=True)
-    upload_date = Column(DateTime, default=datetime.datetime.now)
+    upload_date = Column(String, default=datetime.datetime.now)
+
+    # todo replace by serializer
+    def as_dict(self):
+        return {c.name: getattr(self, c.name) for c in self.__table__.columns}

@@ -2,12 +2,12 @@ import crud
 import models
 import schemas
 import requests
-from settings import IMAGE_STORAGE_URL, IMAGE_STORAGE_API_KEY
-from utility import make_file_name
+from settings import IMAGE_STORAGE_URL, IMAGE_STORAGE_API_KEY, SERVER_URL
+from utility import make_file_name, create_image_url
 from database import SessionLocal, engine
 from typing import Annotated
 from fastapi import FastAPI, UploadFile, Depends, HTTPException
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, FileResponse, Response
 from sqlalchemy.orm import Session
 
 
@@ -40,11 +40,11 @@ def create_meme(
 
         response = requests.post(url=f"{IMAGE_STORAGE_URL}/upload_image/",
                                  files={"image": (image.filename, image_content, image.content_type)},
-                                 headers={"Storage-Key": IMAGE_STORAGE_API_KEY})
-
+                                 headers={"Storage-Key": IMAGE_STORAGE_API_KEY,
+                                          "Content-Disposition": f'attachment; filename="{image.filename}"'})
         if response.status_code == 200:
             image_url = response.json().get("image_url")
-            return crud.create_meme(db=db, meme=meme, image_name=image.filename, image_url=image_url)
+            return crud.create_meme(db=db, meme=meme, image_name=image.filename)
         else:
             raise HTTPException(status_code=503, detail="Failed to upload file to storage.")
 
@@ -65,7 +65,26 @@ def get_meme_by_id(meme_id: int, db: Session = Depends(get_db)):
     db_meme = crud.get_meme_by_id(db, meme_id=meme_id)
     if db_meme is None:
         raise HTTPException(status_code=404, detail=f"Meme with ID {meme_id} doesn't exist!")
-    return db_meme
+    if not db_meme.image_name:
+        return JSONResponse(content=db_meme)
+
+    # make use of a serializer
+    content = db_meme.as_dict()
+    content["image_url"] = f"{SERVER_URL}/memes/{meme_id}/image"
+    return JSONResponse(content=content, status_code=200)
+
+
+@app.get("/memes/{meme_id}/image")
+def get_meme_image_by_id(meme_id: int, db: Session = Depends(get_db)):
+    db_meme = crud.get_meme_by_id(db, meme_id=meme_id)
+    if db_meme is None:
+        raise HTTPException(status_code=404, detail=f"Meme with ID {meme_id} doesn't exist!")
+    if not db_meme.image_name:
+        raise HTTPException(status_code=404, detail=f"Meme with ID {meme_id} has no image!")
+    image_url = create_image_url(db_meme.image_name)
+    response = requests.get(image_url)
+    headers = {"Content-Disposition": f'attachment; filename="{db_meme.image_name}"'}
+    return Response(content=response.content, headers=headers)
 
 
 @app.put("/memes/{meme_id}")
@@ -92,8 +111,7 @@ def update_meme(
                                 headers={"Storage-Key": IMAGE_STORAGE_API_KEY})
 
         if response.status_code == 200:
-            new_image_url = response.json().get("new_image_url")
-            return crud.update_meme(db=db, meme=meme, meme_id=meme_id, image_name=image.filename, image_url=new_image_url)
+            return crud.update_meme(db=db, meme=meme, meme_id=meme_id, image_name=image.filename)
         else:
             raise HTTPException(status_code=503, detail="Failed to upload file to storage.")
 

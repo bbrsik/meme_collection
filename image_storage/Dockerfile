@@ -4,7 +4,8 @@ RUN apt-get update && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 WORKDIR /app
-COPY . .
+COPY requirements.txt requirements.txt
 RUN pip install -r requirements.txt
+COPY . .
 EXPOSE 8002
 CMD ["uvicorn", "main:app", "--port", "8002"]

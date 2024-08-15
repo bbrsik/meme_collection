@@ -31,7 +31,7 @@ try:
         print("No MinIO bucket found.")
         MINIO_CLIENT.make_bucket(MINIO_BUCKET_NAME)
         print("MinIO bucket created.")
-
+    '''
     policy = '{"Version":"2012-10-17",' \
              '"Statement":[{"Effect":"Allow",' \
              '"Principal":"*",' \
@@ -40,7 +40,7 @@ try:
 
     if not MINIO_CLIENT.get_bucket_policy(MINIO_BUCKET_NAME) == policy:
         MINIO_CLIENT.set_bucket_policy(MINIO_BUCKET_NAME, policy)
-
+    '''
 except S3Error as e:
     print("Failed to connect to MinIO")
     print(str(e))

@@ -3,11 +3,10 @@ import models
 from sqlalchemy.orm import Session
 
 
-def create_meme(db: Session, meme: schemas.MemeCreate, image_name=None, image_url=None):
+def create_meme(db: Session, meme: schemas.MemeCreate, image_name=None):
     db_meme = models.Meme(
         text=meme.text,
-        image_name=image_name,
-        image_url=image_url
+        image_name=image_name
     )
     db.add(db_meme)
     db.commit()
@@ -15,7 +14,7 @@ def create_meme(db: Session, meme: schemas.MemeCreate, image_name=None, image_ur
     return db_meme
 
 
-def update_meme(db: Session, meme: schemas.MemeUpdate, meme_id, image_name=None, image_url=None):
+def update_meme(db: Session, meme: schemas.MemeUpdate, meme_id, image_name=None):
 
     db_meme = db.get(models.Meme, meme_id)
 
@@ -23,8 +22,6 @@ def update_meme(db: Session, meme: schemas.MemeUpdate, meme_id, image_name=None,
         db_meme.text = meme.text
     if image_name:
         db_meme.image_name = image_name
-    if image_url:
-        db_meme.image_url = image_url
 
     db.commit()
     db.refresh(db_meme)

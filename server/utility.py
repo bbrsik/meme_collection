@@ -1,4 +1,4 @@
-import os
+from settings import MINIO_URL, MINIO_BUCKET_NAME
 from secrets import token_hex
 
 
@@ -9,15 +9,6 @@ def make_file_name(filename):
     return new_filename
 
 
-# obsolete
-# def make_file_path(full_file_name):
-#     file_path = f"{UPLOAD_DIR}/{full_file_name}"
-#     return file_path
-
-
-# obsolete
-def delete_file(file_path):
-    if os.path.isfile(file_path):
-        os.remove(file_path)
-        return 0
-    return -1
+def create_image_url(image_filename: str):
+    image_url = f"{MINIO_URL}/{MINIO_BUCKET_NAME}/{image_filename}"
+    return image_url

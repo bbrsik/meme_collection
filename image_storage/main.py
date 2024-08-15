@@ -1,5 +1,3 @@
-import os
-from utility import create_image_url
 from settings import MINIO_CLIENT, MINIO_BUCKET_NAME, IMAGE_STORAGE_API_KEY
 from minio import S3Error
 from fastapi import FastAPI, HTTPException, UploadFile, Request, Form
@@ -28,12 +26,10 @@ def upload_image(request: Request,
                                 part_size=10 * 1024 * 1024,
                                 content_type=image.content_type)
 
-        image_url = create_image_url(image.filename)
-
     except S3Error as e:
         raise HTTPException(status_code=503, detail=str(e))
 
-    return JSONResponse(status_code=200, content={"image_url": image_url})
+    return JSONResponse(status_code=200, content={"message": "success"})
 
 
 @app.put("/update_image/")
@@ -57,12 +53,10 @@ def update_image(request: Request,
 
         MINIO_CLIENT.remove_object(bucket_name=MINIO_BUCKET_NAME, object_name=old_image_name)
 
-        new_image_url = create_image_url(new_image.filename)
-
     except S3Error as e:
         raise HTTPException(status_code=503, detail=str(e))
 
-    return JSONResponse(status_code=200, content={"new_image_url": new_image_url})
+    return JSONResponse(status_code=200, content={"message": "success"})
 
 
 @app.delete("/delete_image/")
