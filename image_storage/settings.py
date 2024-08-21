@@ -1,4 +1,5 @@
 import os
+import json
 import logging
 from minio import Minio, S3Error
 from dotenv import load_dotenv, find_dotenv
@@ -31,16 +32,34 @@ try:
         print("No MinIO bucket found.")
         MINIO_CLIENT.make_bucket(MINIO_BUCKET_NAME)
         print("MinIO bucket created.")
-    '''
-    policy = '{"Version":"2012-10-17",' \
-             '"Statement":[{"Effect":"Allow",' \
-             '"Principal":"*",' \
-             '"Action":"s3:GetObject",' \
-             '"Resource":"arn:aws:s3:::' + MINIO_BUCKET_NAME + '/*"}]}'
 
-    if not MINIO_CLIENT.get_bucket_policy(MINIO_BUCKET_NAME) == policy:
-        MINIO_CLIENT.set_bucket_policy(MINIO_BUCKET_NAME, policy)
-    '''
+    # todo delete if not needed
+    # not sure if public policy is actually required
+    policy = {
+        "Version": "2012-10-17",
+        "Statement": [
+            {
+                "Action": [
+                    "s3:GetObject"
+                ],
+                "Effect": "Allow",
+                "Principal": {
+                    "AWS": [
+                        "*"
+                    ]
+                },
+                "Resource": [
+                    f"arn:aws:s3:::{MINIO_BUCKET_NAME}/*"
+                ],
+                "Sid": ""
+            }
+        ]
+    }
+
+    if not policy == MINIO_CLIENT.get_bucket_policy(MINIO_BUCKET_NAME):
+        MINIO_CLIENT.set_bucket_policy(MINIO_BUCKET_NAME, json.dumps(policy))
+        print("Changed MinIO bucket policy.")
+
 except S3Error as e:
     print("Failed to connect to MinIO")
     print(str(e))

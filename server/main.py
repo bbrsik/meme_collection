@@ -41,10 +41,8 @@ def create_meme(
 
         response = requests.post(url=f"{IMAGE_STORAGE_URL}/upload_image/",
                                  files={"image": (image.filename, image_content, image.content_type)},
-                                 headers={"Storage-Key": IMAGE_STORAGE_API_KEY,
-                                          "Content-Disposition": f'attachment; filename="{image.filename}"'})
+                                 headers={"Storage-Key": IMAGE_STORAGE_API_KEY})
         if response.status_code == 200:
-            image_url = response.json().get("image_url")
             return crud.create_meme(db=db, meme=meme, image_name=image.filename)
         else:
             raise HTTPException(status_code=503, detail="Failed to upload file to storage.")

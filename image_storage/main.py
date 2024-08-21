@@ -76,3 +76,10 @@ def delete_image(request: Request,
         raise HTTPException(status_code=503, detail=str(e))
 
     return JSONResponse(status_code=200, content={"message": f"Object '{image_name}' was successfully deleted!"})
+
+
+@app.get("/create_download_url/")
+def create_download_url(request: Request,
+                        image_name: str = Form(...)):
+    # todo in case of public policy being unsafe
+    pass
