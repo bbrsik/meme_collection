@@ -2,12 +2,13 @@ import crud
 import models
 import schemas
 import requests
+from serializers import serialize_meme, serialize_memes
 from settings import IMAGE_STORAGE_URL, IMAGE_STORAGE_API_KEY, SERVER_URL
 from utility import make_file_name, create_image_url
 from database import SessionLocal, engine
 from typing import Annotated
 from fastapi import FastAPI, UploadFile, Depends, HTTPException
-from fastapi.responses import JSONResponse, FileResponse, Response
+from fastapi.responses import JSONResponse, Response
 from sqlalchemy.orm import Session
 
 
@@ -57,7 +58,8 @@ def get_memes(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     memes = crud.get_memes(db, skip=skip, limit=limit)
     if len(memes) == 0:
         return {"response": "Didn't find any memes!"}
-    return memes
+    content = serialize_memes(memes)
+    return JSONResponse(content=content, status_code=200)
 
 
 @app.get("/memes/{meme_id}")
@@ -65,12 +67,7 @@ def get_meme_by_id(meme_id: int, db: Session = Depends(get_db)):
     db_meme = crud.get_meme_by_id(db, meme_id=meme_id)
     if db_meme is None:
         raise HTTPException(status_code=404, detail=f"Meme with ID {meme_id} doesn't exist!")
-    if not db_meme.image_name:
-        return JSONResponse(content=db_meme)
-
-    # make use of a serializer
-    content = db_meme.as_dict()
-    content["image_url"] = f"{SERVER_URL}/memes/{meme_id}/image"
+    content = serialize_meme(db_meme)
     return JSONResponse(content=content, status_code=200)
 
 
