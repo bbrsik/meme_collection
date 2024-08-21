@@ -3,7 +3,7 @@ import models
 import schemas
 import requests
 from serializers import serialize_meme, serialize_memes
-from settings import IMAGE_STORAGE_URL, IMAGE_STORAGE_API_KEY, SERVER_URL
+from settings import IMAGE_STORAGE_URL, IMAGE_STORAGE_API_KEY
 from utility import make_file_name, create_image_url
 from database import SessionLocal, engine
 from typing import Annotated
