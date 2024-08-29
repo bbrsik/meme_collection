@@ -2,6 +2,7 @@ venv/
 .idea/
 __pycache__/
 memes.db
+test.db
 uploaded_images/
 server/.env
 image_storage/.env
