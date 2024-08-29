@@ -50,8 +50,8 @@ def update_image(request: Request,
                                 length=new_image.size,
                                 part_size=10 * 1024 * 1024,
                                 content_type=new_image.content_type)
-
-        MINIO_CLIENT.remove_object(bucket_name=MINIO_BUCKET_NAME, object_name=old_image_name)
+        if old_image_name != "None":
+            MINIO_CLIENT.remove_object(bucket_name=MINIO_BUCKET_NAME, object_name=old_image_name)
 
     except S3Error as e:
         raise HTTPException(status_code=503, detail=str(e))
@@ -78,6 +78,7 @@ def delete_image(request: Request,
     return JSONResponse(status_code=200, content={"message": f"Object '{image_name}' was successfully deleted!"})
 
 
+# obsolete
 @app.get("/create_download_url/")
 def create_download_url(request: Request,
                         image_name: str = Form(...)):

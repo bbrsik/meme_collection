@@ -1,10 +1,10 @@
 import os
 import json
-import logging
+# import logging
 from minio import Minio, S3Error
 from dotenv import load_dotenv, find_dotenv
 
-logger = logging.getLogger(__name__)
+# logger = logging.getLogger(__name__)
 # todo настроить логи
 
 if find_dotenv():
@@ -29,13 +29,11 @@ try:
                          secure=False)
 
     if not MINIO_CLIENT.bucket_exists(MINIO_BUCKET_NAME):
-        print("No MinIO bucket found.")
+        print("\033[93mNo MinIO bucket found!\033[0m")
         MINIO_CLIENT.make_bucket(MINIO_BUCKET_NAME)
-        print("MinIO bucket created.")
+        print("\033[92mMinIO bucket created.\033[0m")
 
-    # todo delete if not needed
-    # not sure if public policy is actually required
-    policy = {
+    policy = json.dumps({
         "Version": "2012-10-17",
         "Statement": [
             {
@@ -54,13 +52,10 @@ try:
                 "Sid": ""
             }
         ]
-    }
-
-    if not policy == MINIO_CLIENT.get_bucket_policy(MINIO_BUCKET_NAME):
-        MINIO_CLIENT.set_bucket_policy(MINIO_BUCKET_NAME, json.dumps(policy))
-        print("Changed MinIO bucket policy.")
+    })
+    MINIO_CLIENT.set_bucket_policy(MINIO_BUCKET_NAME, policy)
 
 except S3Error as e:
-    print("Failed to connect to MinIO")
     print(str(e))
-    print("Failed to connect to MinIO")
+    print("\033[91mERROR: Failed to connect to MinIO!\033[0m")
+    exit()

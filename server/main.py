@@ -4,7 +4,7 @@ import schemas
 import requests
 from serializers import serialize_meme, serialize_memes
 from settings import IMAGE_STORAGE_URL, IMAGE_STORAGE_API_KEY
-from utility import make_file_name, create_image_url
+from utility import make_file_name, create_image_url, make_downloaded_file_name
 from database import SessionLocal, engine
 from typing import Annotated
 from fastapi import FastAPI, UploadFile, Depends, HTTPException
@@ -78,7 +78,8 @@ def get_meme_image_by_id(meme_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail=f"Meme with ID {meme_id} has no image!")
     image_url = create_image_url(db_meme.image_name)
     response = requests.get(image_url)
-    headers = {"Content-Disposition": f'attachment; filename="{db_meme.image_name}"'}
+    downloaded_filename = make_downloaded_file_name(filename=db_meme.image_name)
+    headers = {"Content-Disposition": f'attachment; filename="{downloaded_filename}"'}
     return Response(content=response.content, headers=headers)
 
 
@@ -89,7 +90,9 @@ def update_meme(
         image: UploadFile | None = None,
         db: Session = Depends(get_db)
 ):
-    db_meme = get_meme_by_id(meme_id, db)
+    db_meme = crud.get_meme_by_id(db, meme_id=meme_id)
+    if db_meme is None:
+        raise HTTPException(status_code=404, detail=f"Meme with ID {meme_id} doesn't exist!")
 
     if not image:
         return crud.update_meme(db=db, meme=meme, meme_id=meme_id)
@@ -100,8 +103,11 @@ def update_meme(
         image.filename = make_file_name(image.filename)
         image_content = image.file.read()
 
+        old_image_name = db_meme.image_name
+        if not old_image_name:
+            old_image_name = "None"
         response = requests.put(url=f"{IMAGE_STORAGE_URL}/update_image/",
-                                data={"old_image_name": db_meme.image_name},
+                                data={"old_image_name": old_image_name},
                                 files={"new_image": (image.filename, image_content, image.content_type)},
                                 headers={"Storage-Key": IMAGE_STORAGE_API_KEY})
 
@@ -116,7 +122,10 @@ def update_meme(
 
 @app.delete("/memes/{meme_id}")
 def delete_meme(meme_id: int, db: Session = Depends(get_db)):
-    db_meme = get_meme_by_id(meme_id, db)
+    db_meme = crud.get_meme_by_id(db, meme_id=meme_id)
+    if db_meme is None:
+        raise HTTPException(status_code=404, detail=f"Meme with ID {meme_id} doesn't exist!")
+
     if not db_meme.image_name:
         crud.delete_meme(db, meme_id=meme_id)
         return JSONResponse(status_code=200,
