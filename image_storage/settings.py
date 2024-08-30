@@ -1,11 +1,8 @@
 import os
 import json
-# import logging
 from minio import Minio, S3Error
 from dotenv import load_dotenv, find_dotenv
 
-# logger = logging.getLogger(__name__)
-# todo настроить логи
 
 if find_dotenv():
     load_dotenv()

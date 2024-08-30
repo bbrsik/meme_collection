@@ -28,8 +28,7 @@ def get_db():
 def create_meme(
         meme: Annotated[schemas.MemeCreate, Depends()],
         image: UploadFile | None = None,
-        db: Session = Depends(get_db)
-):
+        db: Session = Depends(get_db)):
     if not image:
         return crud.create_meme(db=db, meme=meme)
     if image.content_type not in ["image/jpeg", "image/jpg", "image/png"]:
@@ -88,8 +87,7 @@ def update_meme(
         meme_id,
         meme: Annotated[schemas.MemeUpdate, Depends()],
         image: UploadFile | None = None,
-        db: Session = Depends(get_db)
-):
+        db: Session = Depends(get_db)):
     db_meme = crud.get_meme_by_id(db, meme_id=meme_id)
     if db_meme is None:
         raise HTTPException(status_code=404, detail=f"Meme with ID {meme_id} doesn't exist!")

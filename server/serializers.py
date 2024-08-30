@@ -13,7 +13,6 @@ def serialize_meme(db_meme):
 
 
 def serialize_memes(db_memes: list):
-    # todo list comp
     serialized_memes = []
     for db_meme in db_memes:
         serialized_memes.append(serialize_meme(db_meme))
