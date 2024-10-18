@@ -15,6 +15,7 @@ TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engin
 
 Base.metadata.create_all(bind=engine)
 
+
 def override_get_db():
     try:
         db = TestingSessionLocal()
@@ -22,15 +23,18 @@ def override_get_db():
     finally:
         db.close()
 
+
 app.dependency_overrides[get_db] = override_get_db
 
 client = TestClient(app)
+
 
 @pytest.fixture(autouse=True)
 def setup_db():
     Base.metadata.create_all(bind=engine)
     yield
     Base.metadata.drop_all(bind=engine)
+
 
 def test_create_meme():
     response = client.post(
@@ -42,6 +46,7 @@ def test_create_meme():
     assert data["text"] == "This is a test meme"
     assert "id" in data
     assert "upload_date" in data
+
 
 def test_create_meme_with_image(mocker):
     # Mock the requests.post call
@@ -59,6 +64,7 @@ def test_create_meme_with_image(mocker):
     assert "image_name" in data
     assert "upload_date" in data
 
+
 def test_get_memes():
     # Create a test meme
     client.post("/memes/?text=This is a test meme")
@@ -69,6 +75,7 @@ def test_get_memes():
     assert len(data) > 0
     assert data[0]["text"] == "This is a test meme"
 
+
 def test_get_meme_by_id():
     # Create a test meme
     create_response = client.post("/memes/?text=This is a test meme")
@@ -78,6 +85,7 @@ def test_get_meme_by_id():
     assert response.status_code == 200
     data = response.json()
     assert data["text"] == "This is a test meme"
+
 
 def test_get_meme_image_by_id(mocker):
     # Mock the requests.get call
@@ -99,6 +107,7 @@ def test_get_meme_image_by_id(mocker):
     assert response.status_code == 200
     assert response.content == b"test image content"
 
+
 def test_update_meme():
     # Create a test meme
     create_response = client.post("/memes/?text=This is a test meme")
@@ -111,6 +120,7 @@ def test_update_meme():
     assert response.status_code == 200
     data = response.json()
     assert data["text"] == "This is an updated test meme"
+
 
 def test_update_meme_with_image(mocker):
     # Mock the requests.put call
@@ -130,6 +140,7 @@ def test_update_meme_with_image(mocker):
     data = response.json()
     assert data["text"] == "This is an updated test meme"
     assert "image_name" in data
+
 
 def test_delete_meme(mocker):
     # Mock the requests.delete call
